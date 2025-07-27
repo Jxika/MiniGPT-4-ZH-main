@@ -28,7 +28,7 @@ class BaseTask:
 
     def build_model(self, cfg):
         model_config = cfg.model_cfg
-
+        #通过注册表获取指定架构的模型类（mini_gpt4）
         model_cls = registry.get_model_class(model_config.arch)
         return model_cls.from_config(model_config)
 
@@ -49,7 +49,7 @@ class BaseTask:
         datasets_config = cfg.datasets_cfg
 
         assert len(datasets_config) > 0, "At least one dataset has to be specified."
-
+        #配置文件中有两个数据集（laion、cc_sbu）
         for name in datasets_config:
             dataset_config = datasets_config[name]
 

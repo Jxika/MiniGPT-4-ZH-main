@@ -42,6 +42,7 @@ class Blip2Base(BaseModel):
         else:
             return contextlib.nullcontext()
 
+    #Q-Former的初始化（包含投影层）
     @classmethod
     def init_Qformer(cls, num_query_token, vision_width, cross_attention_freq=2):
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")

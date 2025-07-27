@@ -48,7 +48,7 @@ class MiniGPT4(Blip2Base):
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
-        if freeze_vit:
+        if freeze_vit:  #视觉编码器的和Q-Former的初始化与冻结逻辑
             for name, param in self.visual_encoder.named_parameters():
                 param.requires_grad = False
             self.visual_encoder = self.visual_encoder.eval()

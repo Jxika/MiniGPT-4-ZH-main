@@ -80,15 +80,17 @@ def main():
 
     cfg = Config(parse_args())
 
+   #run：max_epoch=4,iters_per_epoch=5000,amp=True开启混合精度
     init_distributed_mode(cfg.run_cfg)
 
     setup_seeds(cfg)
 
     # set after init_distributed_mode() to only log on master.
     setup_logger()
-
+    #将（如模型参数、训练参数、数据集设置等）打印出来
     cfg.pretty_print()
 
+    #返回一个任务对象，通常是ImageTextPretrainTask或其他继承自BaseTask的类实例
     task = tasks.setup_task(cfg)
     datasets = task.build_datasets(cfg)
     model = task.build_model(cfg)
@@ -98,6 +100,7 @@ def main():
     )
     runner.train()
 
-
+#训练代码 torchrun --nproc-per-node NUM_GPU train.py --cfg-path train_configs/minigpt4_stage1_pretrain.yaml
+# 这是一条用于分布式训练MiniGPT-4模型的命令，NUM_GPU表示使用的GPU数量。
 if __name__ == "__main__":
     main()
