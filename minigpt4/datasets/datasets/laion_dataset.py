@@ -9,6 +9,14 @@ import webdataset as wds
 from minigpt4.datasets.datasets.base_dataset import BaseDataset
 
 
+#数据格式可能涨这样：{
+#   "url": "https://example.com/image123.jpg",
+#   "caption": "A dog running on the grass in a sunny park.",
+#   "width": 640,
+#   "height": 480,
+#   "status": "success"
+# }
+
 class LaionDataset(BaseDataset):
     def __init__(self, vis_processor, text_processor, location):
         super().__init__(vis_processor=vis_processor, text_processor=text_processor)

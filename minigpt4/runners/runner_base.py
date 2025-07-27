@@ -345,6 +345,7 @@ class RunnerBase:
 
         return train_dataloader
 
+    #根据配置和当前任务的job_id,自动创建并管理训练输出目录和结果目录
     def setup_output_dir(self):
         lib_root = Path(registry.get_path("library_root"))
 
@@ -371,11 +372,12 @@ class RunnerBase:
         if not self.evaluate_only and self.resume_ckpt_path is not None:
             self._load_checkpoint(self.resume_ckpt_path)
 
+        #训练主循环
         for cur_epoch in range(self.start_epoch, self.max_epoch):
             # training phase
             if not self.evaluate_only:
                 logging.info("Start training")
-                train_stats = self.train_epoch(cur_epoch)
+                train_stats = self.train_epoch(cur_epoch) #加载训练的超参数
                 self.log_stats(split_name="train", stats=train_stats)
 
             # evaluation phase
@@ -432,7 +434,7 @@ class RunnerBase:
             return test_logs
 
     def train_epoch(self, epoch):
-        # train
+        # train  训练时加载
         self.model.train()
 
         return self.task.train_epoch(

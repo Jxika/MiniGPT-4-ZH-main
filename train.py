@@ -93,7 +93,9 @@ def main():
     #返回一个任务对象，通常是ImageTextPretrainTask或其他继承自BaseTask的类实例
     task = tasks.setup_task(cfg)
     datasets = task.build_datasets(cfg)
-    model = task.build_model(cfg)
+
+    #预训练时加载的是 mini_gpt4类，type=pretrain_vicuna，并且freeze_vit=true,freeze_qformer=True
+    model = task.build_model(cfg)  
 
     runner = get_runner_class(cfg)(
         cfg=cfg, job_id=job_id, task=task, model=model, datasets=datasets
