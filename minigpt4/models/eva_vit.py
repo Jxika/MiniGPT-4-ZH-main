@@ -411,21 +411,22 @@ def convert_weights_to_fp16(model: nn.Module):
 
     model.apply(_convert_weights_to_fp16)
     
-    
+#这个方法为 minigpt-4 的视觉编码器提供了一个高效的图像特征提取器
 def create_eva_vit_g(img_size=224,drop_path_rate=0.4,use_checkpoint=False,precision="fp16"):
     model = VisionTransformer(
-        img_size=img_size,
-        patch_size=14,
+        img_size=img_size,  #输入图像的尺寸（默认为224）
+        patch_size=14, #图像分块的大小
         use_mean_pooling=False,
         embed_dim=1408,
-        depth=39,
-        num_heads=1408//88,
-        mlp_ratio=4.3637,
+        depth=39, #transformer的层数
+        num_heads=1408//88, #多头注意力的头数
+        mlp_ratio=4.3637, #MLP层的宽度与嵌入维度的比例（4.3627）
         qkv_bias=True,
         drop_path_rate=drop_path_rate,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        use_checkpoint=use_checkpoint,
+        use_checkpoint=use_checkpoint, #是否使用梯度检查点以节省显存
     )  
+    #加载预训练模型权重
     url = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth"
     cached_file = download_cached_file(
         url, check_hash=False, progress=True

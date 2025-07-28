@@ -59,14 +59,13 @@ class Blip2Base(BaseModel):
         return Qformer, query_tokens
 
     @classmethod
-    def init_vision_encoder(
-        cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision
-    ):
+    def init_vision_encoder(cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision):
         assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
+        #创建视觉编码器
         visual_encoder = create_eva_vit_g(
             img_size, drop_path_rate, use_grad_checkpoint, precision
         )
-
+        #visual_encoder.num_features视觉编码器特征维度，通常由模型的embed_dim决定。在create_eva_vit_g中是1408
         ln_vision = LayerNorm(visual_encoder.num_features)
         return visual_encoder, ln_vision
 
