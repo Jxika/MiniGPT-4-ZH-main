@@ -434,19 +434,19 @@ class RunnerBase:
             return test_logs
 
     def train_epoch(self, epoch):
-        # train  训练时加载
+        # train  训练时加载 
         self.model.train()
 
         return self.task.train_epoch(
-            epoch=epoch,
+            epoch=epoch,   
             model=self.model,
-            data_loader=self.train_loader,
-            optimizer=self.optimizer,
-            scaler=self.scaler,
-            lr_scheduler=self.lr_scheduler,
+            data_loader=self.train_loader,  #数据加载器
+            optimizer=self.optimizer,       #优化器
+            scaler=self.scaler,             #用于混合精度训练
+            lr_scheduler=self.lr_scheduler, #学习率调度器，用于动态调整学习率
             cuda_enabled=self.cuda_enabled,
             log_freq=self.log_freq,
-            accum_grad_iters=self.accum_grad_iters,
+            accum_grad_iters=self.accum_grad_iters, #梯度累积的迭代次数
         )
 
     @torch.no_grad()

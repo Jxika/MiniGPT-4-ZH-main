@@ -10,7 +10,7 @@ from minigpt4.models.blip2 import Blip2Base, disabled_train
 from minigpt4.models.modeling_llama import LlamaForCausalLM
 from transformers import LlamaTokenizer
 
-
+#预训练时的 model_type: pretrain_vicuna
 @registry.register_model("mini_gpt4")
 class MiniGPT4(Blip2Base):
     """
@@ -23,15 +23,15 @@ class MiniGPT4(Blip2Base):
 
     def __init__(
         self,
-        vit_model="eva_clip_g",
-        q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
-        img_size=224,
+        vit_model="eva_clip_g", #视觉编码器（vision Transformer）
+        q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth", #Q-Former的预训练模型路径
+        img_size=224,  #输入图像大小
         drop_path_rate=0,
         use_grad_checkpoint=False,
-        vit_precision="fp16",
+        vit_precision="fp16", #视觉编码器的精度
         freeze_vit=True,
         freeze_qformer=True,
-        num_query_token=32,
+        num_query_token=32, #Q-former的参数
         llama_model="",
         prompt_path="",
         prompt_template="",
@@ -40,11 +40,13 @@ class MiniGPT4(Blip2Base):
         end_sym='\n',
     ):
         super().__init__()
-
+         
+        #初始化tokenizer
         self.tokenizer = self.init_tokenizer()
         self.low_resource = low_resource
 
         print('Loading VIT')
+        #加载视觉编码器
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
