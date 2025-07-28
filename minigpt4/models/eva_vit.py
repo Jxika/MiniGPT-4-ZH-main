@@ -413,6 +413,8 @@ def convert_weights_to_fp16(model: nn.Module):
     
 #这个方法为 minigpt-4 的视觉编码器提供了一个高效的图像特征提取器
 def create_eva_vit_g(img_size=224,drop_path_rate=0.4,use_checkpoint=False,precision="fp16"):
+    #视觉编码器通过预训练获得强大的视觉表征能力，在多模态系统中充当“视觉理解大脑”，将像素空间的
+    #信息转化为语义空间的高级表示，为后续的语言模型处理提供关键的视觉上下文信息。
     model = VisionTransformer(
         img_size=img_size,  #输入图像的尺寸（默认为224）
         patch_size=14, #图像分块的大小
@@ -421,11 +423,17 @@ def create_eva_vit_g(img_size=224,drop_path_rate=0.4,use_checkpoint=False,precis
         depth=39, #transformer的层数
         num_heads=1408//88, #多头注意力的头数
         mlp_ratio=4.3637, #MLP层的宽度与嵌入维度的比例（4.3627）
-        qkv_bias=True,
-        drop_path_rate=drop_path_rate,
+        qkv_bias=True,#是否在QKV线性变化中使用偏置
+        drop_path_rate=drop_path_rate,#dropPath的比率
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         use_checkpoint=use_checkpoint, #是否使用梯度检查点以节省显存
     )  
+    #EVA-VIT-G 是通过大规模自监督学习预训练得到的视觉编码器
+    #核心功能
+    #.图像特征提取：将输入图像转换为高层语义特征表示
+    #.输入:224x224 RGB图像->输出[1,196,1408]维特征
+    #.跨模态对齐：将视觉特征投影到与文本特征对齐的共享空间
+
     #加载预训练模型权重
     url = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth"
     cached_file = download_cached_file(

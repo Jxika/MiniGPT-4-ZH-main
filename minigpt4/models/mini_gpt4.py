@@ -50,6 +50,10 @@ class MiniGPT4(Blip2Base):
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
+        #为什么需要冻结参数：
+        #节省计算资源：视觉编码器参数量大（如EVA-VIT-G有约10亿参数），冻结后只需前向传播，不计算梯度。
+        #防止过拟合：预训练的视觉编码器已经具备强大的特征提取能力，微调可能会破坏其通用性。
+        #稳定训练：多模型训练中，优先调整轻量级的Q-Former和LLM部分更高效。
         if freeze_vit:  #视觉编码器的和Q-Former的初始化与冻结逻辑
             for name, param in self.visual_encoder.named_parameters():
                 param.requires_grad = False
@@ -58,7 +62,7 @@ class MiniGPT4(Blip2Base):
             for name, param in self.ln_vision.named_parameters():
                 param.requires_grad = False
             self.ln_vision = self.ln_vision.eval()
-            self.ln_vision.train = disabled_train
+            self.ln_vision.train = disabled_train #防止误用的保护措施。即使代码中意外调用model.train()，也不会改变ln_vision的状态。
             logging.info("freeze vision encoder")
         print('Loading VIT Done')
 
@@ -99,13 +103,16 @@ class MiniGPT4(Blip2Base):
                 llama_model,
                 torch_dtype=torch.float16,
             )
-
+        
+        #冻结LLaMA的所有参数，使其在训练过程中不更新权重。
+        #这是为了避免破坏预训练的语言知识，仅训练视觉到语言的投影层
         for name, param in self.llama_model.named_parameters():
             param.requires_grad = False
         print('Loading LLAMA Done')
 
         self.llama_proj = nn.Linear(
-            self.Qformer.config.hidden_size, self.llama_model.config.hidden_size
+            self.Qformer.config.hidden_size,  #Q-Former 输出的维度（如 768）
+            self.llama_model.config.hidden_size #LLaMA 的隐藏层维度（如 4096）
         )
         self.max_txt_len = max_txt_len
         self.end_sym = end_sym

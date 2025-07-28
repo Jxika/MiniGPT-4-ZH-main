@@ -43,6 +43,14 @@ class Blip2Base(BaseModel):
             return contextlib.nullcontext()
 
     #Q-Former的初始化（包含投影层）
+    #Q-Former是BLIP-2和miniGPT-4等多模态模型中的核心组件，其核心作用是在视觉编码器和语言模型之间建立高效的跨模态桥梁。
+    #视觉-语言特征对齐
+    #输入：视觉编码器（如 EVA-ViT-G）输出的图像特征（形状 [batch, num_patches, vision_width]，例如 [1, 256, 1408]）。
+    #输出：固定数量的查询向量（num_query_token，如 32 个），每个向量编码了与语言模型兼容的视觉语义信息。
+
+    #用于初始化一个带与交叉注意力机制的 Q-Former（Query Transformer）模型。
+    #接收三个参数， 查询向量的数量，视觉特征维度，交叉注意力层的插入频率 
+
     @classmethod
     def init_Qformer(cls, num_query_token, vision_width, cross_attention_freq=2):
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
@@ -51,10 +59,13 @@ class Blip2Base(BaseModel):
         encoder_config.add_cross_attention = True
         encoder_config.cross_attention_freq = cross_attention_freq
         encoder_config.query_length = num_query_token
-        Qformer = BertLMHeadModel(config=encoder_config)
-        query_tokens = nn.Parameter(
+        Qformer = BertLMHeadModel(config=encoder_config) #使用修改后的配置初始化一个bert语言模型
+        #初始化查询向量
+        query_tokens = nn.Parameter(    
+            #创建一个形状为（1，num_query_token，encoder_config.hidden_size）的全零张量
             torch.zeros(1, num_query_token, encoder_config.hidden_size)
         )
+        #用正态分布初始化查询向量
         query_tokens.data.normal_(mean=0.0, std=encoder_config.initializer_range)
         return Qformer, query_tokens
 
