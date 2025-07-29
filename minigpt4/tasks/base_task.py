@@ -32,6 +32,8 @@ class BaseTask:
         model_cls = registry.get_model_class(model_config.arch)
         return model_cls.from_config(model_config)
 
+    #这段代码的主要功能是构建一个数据集字典，包含训练集、验证集和测试集。
+    #它通过配置文件动态加载数据集，并确保数据集合注释文件在不存在时自动下载。
     def build_datasets(self, cfg):
         """
         Build a dictionary of datasets, keyed by split 'train', 'valid', 'test'.
@@ -45,23 +47,39 @@ class BaseTask:
         """
 
         datasets = dict()
-
         datasets_config = cfg.datasets_cfg
 
         assert len(datasets_config) > 0, "At least one dataset has to be specified."
         #配置文件中有两个数据集（laion、cc_sbu）
+        #datasets：
+        #  laion:
+        #    vis_processor:
+        #        train:
+        #            name: "blip2_image_train"
+        #            image_size: 224
+        #    text_processor:
+        #        train:
+        #            name: "blip_caption"
+        #    sample_ratio: 115   
+        """
+        第一次迭代：
+        ·name = "laion"
+        ·dataset_config = datasets_config["laion"]
+                  （即 {vis_processor: {...}, text_processor: {...}, sample_ratio: 115}）
+        """
+
         for name in datasets_config:
             dataset_config = datasets_config[name]
 
             builder = registry.get_builder_class(name)(dataset_config)
             dataset = builder.build_datasets()
 
-            dataset['train'].name = name
+            dataset['train'].name = name  
             if 'sample_ratio' in dataset_config:
                 dataset['train'].sample_ratio = dataset_config.sample_ratio
 
             datasets[name] = dataset
-
+        #训练时返回的数据格式是{ 'imgae':[.....],'text_input':xxxxxx }
         return datasets
 
     def train_step(self, model, samples):

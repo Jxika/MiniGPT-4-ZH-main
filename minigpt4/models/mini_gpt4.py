@@ -22,6 +22,7 @@ class MiniGPT4(Blip2Base):
     }
 
     #加载vit、Q-Former和LLaMA模型的初始化参数  定义self.llama_proj
+    #
     def __init__(
         self,
         vit_model="eva_clip_g", #视觉编码器（vision Transformer）
@@ -42,7 +43,7 @@ class MiniGPT4(Blip2Base):
     ):
         super().__init__()
          
-        #初始化tokenizer
+        #初始化bert的tokenizer
         self.tokenizer = self.init_tokenizer()
         self.low_resource = low_resource
 
