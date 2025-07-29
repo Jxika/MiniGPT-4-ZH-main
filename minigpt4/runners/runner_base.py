@@ -434,8 +434,9 @@ class RunnerBase:
             return test_logs
 
     def train_epoch(self, epoch):
-        # train  训练时加载 
-        self.model.train()
+        # ·切换模式：启用训练相关的行为（dropout），但仅对可训练部分（llama_proj）生效
+        # ·不影响参数更新：它不会自动执行训练循环，只是为训练做准备
+        self.model.train()  
 
         return self.task.train_epoch(
             epoch=epoch,   

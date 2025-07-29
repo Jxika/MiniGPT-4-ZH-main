@@ -21,6 +21,7 @@ class MiniGPT4(Blip2Base):
         "pretrain_vicuna": "configs/models/minigpt4.yaml",
     }
 
+    #加载vit、Q-Former和LLaMA模型的初始化参数  定义self.llama_proj
     def __init__(
         self,
         vit_model="eva_clip_g", #视觉编码器（vision Transformer）
@@ -89,6 +90,7 @@ class MiniGPT4(Blip2Base):
 
         print('Loading LLAMA')
         self.llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model, use_fast=False)
+        #将填充标记（pad_token）设置为结束标记（eos_token）,确保在填充时使用结束标记。
         self.llama_tokenizer.pad_token = self.llama_tokenizer.eos_token
 
         if self.low_resource:
@@ -114,8 +116,8 @@ class MiniGPT4(Blip2Base):
             self.Qformer.config.hidden_size,  #Q-Former 输出的维度（如 768）
             self.llama_model.config.hidden_size #LLaMA 的隐藏层维度（如 4096）
         )
-        self.max_txt_len = max_txt_len
-        self.end_sym = end_sym
+        self.max_txt_len = max_txt_len #文本最大长度限制
+        self.end_sym = end_sym    #文本结束符号
 
         if prompt_path:
             with open(prompt_path, 'r') as f:

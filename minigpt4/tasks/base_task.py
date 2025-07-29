@@ -99,18 +99,8 @@ class BaseTask:
 
         return results
 
-    def train_epoch(
-        self,
-        epoch,
-        model,
-        data_loader,
-        optimizer,
-        lr_scheduler,
-        scaler=None,
-        cuda_enabled=False,
-        log_freq=50,
-        accum_grad_iters=1,
-    ):
+    #实现了一个训练周期的逻辑，即在一个完整的训练周期中，多模型进行训练。该方法调用了train_inner_loop,实际训练逻辑封装在train_inner_loop
+    def train_epoch(self,epoch,model,data_loader,optimizer,lr_scheduler,scaler=None,cuda_enabled=False,log_freq=50,accum_grad_iters=1):
         return self._train_inner_loop(
             epoch=epoch,
             iters_per_epoch=lr_scheduler.iters_per_epoch,
@@ -152,19 +142,13 @@ class BaseTask:
             accum_grad_iters=accum_grad_iters,
         )
 
-    def _train_inner_loop(
-        self,
-        epoch,
-        iters_per_epoch,
-        model,
-        data_loader,
-        optimizer,
-        lr_scheduler,
-        scaler=None,
-        start_iters=None,
-        log_freq=50,
-        cuda_enabled=False,
-        accum_grad_iters=1,
+    #实际训练的核心循环，支持基于轮次和基于迭代次数的训练模式。其主要功能包括：
+    #数据加载与迭代
+    #混合精度训练AMP
+    #梯度累积
+    #学习率动态调整
+    #训练指标
+    def _train_inner_loop(self,epoch,iters_per_epoch,model,data_loader,optimizer,lr_scheduler,scaler=None,start_iters=None,log_freq=50,cuda_enabled=False,accum_grad_iters=1,
     ):
         """
         An inner training loop compatible with both epoch-based and iter-based training.
@@ -177,8 +161,8 @@ class BaseTask:
         if not hasattr(data_loader, "__next__"):
             # convert to iterator if not already
             data_loader = iter(data_loader)
-
-        metric_logger = MetricLogger(delimiter="  ")
+        
+        metric_logger = MetricLogger(delimiter="  ") #指标记录器
         metric_logger.add_meter("lr", SmoothedValue(window_size=1, fmt="{value:.6f}"))
         metric_logger.add_meter("loss", SmoothedValue(window_size=1, fmt="{value:.4f}"))
 
@@ -199,12 +183,12 @@ class BaseTask:
 
         for i in metric_logger.log_every(range(iters_per_epoch), log_freq, header):
             # if using iter-based runner, we stop after iters_per_epoch iterations.
-            if i >= iters_per_epoch:
+            if i >= iters_per_epoch:  #iters_per_epoch=5000
                 break
 
-            samples = next(data_loader)
+            samples = next(data_loader)#加载数据
 
-            samples = prepare_sample(samples, cuda_enabled=cuda_enabled)
+            samples = prepare_sample(samples, cuda_enabled=cuda_enabled)  #将数据移动到GPU，将数据（如图像、文本）转换为模型输入格式
             samples.update(
                 {
                     "epoch": inner_epoch,
@@ -213,10 +197,11 @@ class BaseTask:
                 }
             )
 
-            lr_scheduler.step(cur_epoch=inner_epoch, cur_step=i)
+            lr_scheduler.step(cur_epoch=inner_epoch, cur_step=i) #动态更新学习率
+
 
             with torch.cuda.amp.autocast(enabled=use_amp):
-                loss = self.train_step(model=model, samples=samples)
+                loss = self.train_step(model=model, samples=samples)  #调用model(samples)执行前向传播，返回损失值。
 
             # after_train_step()
             if use_amp:
@@ -230,7 +215,7 @@ class BaseTask:
                     scaler.step(optimizer)
                     scaler.update()                     
                 else:    
-                    optimizer.step()
+                    optimizer.step()  #更新优化器中的参数
                 optimizer.zero_grad()
 
             metric_logger.update(loss=loss.item())
@@ -240,6 +225,10 @@ class BaseTask:
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
         logging.info("Averaged stats: " + str(metric_logger.global_avg()))
+        #训练日志示例： Train: data epoch: [1] Iteration [50/100], Loss: 1.234, LR: 0.000123
+                   #   Train: data epoch: [1] Iteration [100/100], Loss: 0.987, LR: 0.000115
+                   #   Averaged stats: loss=1.123 lr=0.000120
+
         return {
             k: "{:.3f}".format(meter.global_avg)
             for k, meter in metric_logger.meters.items()
